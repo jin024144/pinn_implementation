@@ -7,11 +7,15 @@ import torch.nn.init
 from scipy.stats import qmc 
 import matplotlib.pyplot as plt
 from matplotlib import cm 
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+data_path = os.path.join(script_dir, '../../data/cylinder_nektar_wake.mat')
+
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else"cpu")
 print(device)
 
-data =  scipy.io.loadmat('../../data/cylinder_nektar_wake.mat')
+data =  scipy.io.loadmat(data_path)
 N_train = 5000
 
 X_star=data['X_star'] #Nx2
@@ -102,7 +106,7 @@ def fg(x,y,t,lamb, net):
     return residual, u ,v, p
 
 losses = []
-iterations = 20000
+iterations = 40000
 previous_validation_loss=99999999.0
 lamb=np.array([0,0])    
 pt_lamb = Variable(torch.from_numpy(lamb).float(),requires_grad=True).to(device) 
@@ -137,7 +141,7 @@ for epoch in range(iterations) :
         print("Lambda values:", net.lambda1.item(), net.lambda2.item())
         loss_value = loss.item()
         losses.append(loss_value)
-    torch.save(net.state_dict(), "parameters_checkpoints/Model_parameters.pth")
+torch.save(net.state_dict(), os.path.join(os.path.dirname(os.path.abspath(__file__)), "parameters_checkpoints/Model_parameters.pth"))
 
 
 plt.plot(losses, label="Training Loss")
@@ -150,7 +154,7 @@ plt.show()
 
 
 
-data = scipy.io.loadmat('../../data/cylinder_nektar_wake.mat')
+data = scipy.io.loadmat(data_path)
 X_star = data['X_star']  # Nx2
 t_star = data['t']  # Tx1
 P_star = data['p_star']  # NxT
@@ -213,5 +217,5 @@ ax2.set_title('Exact pressure (t=0)')
 fig.colorbar(im2, ax=ax2)
 
 plt.tight_layout()
-plt.savefig('figures/pressure_comparison_t0.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figures/pressure_comparison_t0.png'), dpi=300, bbox_inches='tight')
 plt.show()
